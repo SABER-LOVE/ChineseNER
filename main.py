@@ -16,8 +16,8 @@ from utils import print_config, save_config, load_config, test_ner
 from data_utils import load_word2vec, create_input, input_from_line, BatchManager
 
 flags = tf.app.flags
-flags.DEFINE_boolean("clean",       True,      "clean train folder")
-flags.DEFINE_boolean("train",       True,      "Wither train the model")
+flags.DEFINE_boolean("clean",       False,      "clean train folder")
+flags.DEFINE_boolean("train",       False,      "Wither train the model")
 # configurations for the model
 flags.DEFINE_integer("seg_dim",     20,         "Embedding size for segmentation, 0 if not used")
 flags.DEFINE_integer("char_dim",    100,        "Embedding size for characters")
@@ -199,6 +199,18 @@ def evaluate_line():
     with tf.Session(config=tf_config) as sess:
         model = create_model(sess, Model, FLAGS.ckpt_path, load_word2vec, config, id_to_char, logger)
         while True:
+            f1 = r'F:\PycharmProjects\dl2\deeplearning\data\nlpcc2016\nlpcc-iccpol-2016.kbqa.training.testing-data-all.txt'
+            with open(f1+'.crf.txt','w',encoding='utf-8') as o1:
+                with codecs.open(f1,'r','utf-8') as f1:
+                    for l in f1.readlines():
+                        line = l.split('\t')[0]
+                        result = model.evaluate_line(sess, input_from_line(line, char_to_id), id_to_tag)
+                        print(result)
+                        o1.write(l.strip('\n').strip('\r')+'\t')
+                        if len(result['entities'])>0:
+                            for k,v in dict(result['entities'][0]).items():
+                                o1.write("%s\t%s\t"%(k,v))
+                        o1.write('\n')
             # try:
             #     line = input("请输入测试句子:")
             #     result = model.evaluate_line(sess, input_from_line(line, char_to_id), id_to_tag)
@@ -206,9 +218,10 @@ def evaluate_line():
             # except Exception as e:
             #     logger.info(e)
 
-                line = input("请输入测试句子:")
-                result = model.evaluate_line(sess, input_from_line(line, char_to_id), id_to_tag)
-                print(result)
+                # line = input("请输入测试句子:")
+                # result = model.evaluate_line(sess, input_from_line(line, char_to_id), id_to_tag)
+                # print(result)
+
 
 
 def main(_):
